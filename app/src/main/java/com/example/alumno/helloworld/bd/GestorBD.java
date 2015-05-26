@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.example.alumno.helloworld.Modelo.CategoriaEntrenamiento;
 import com.example.alumno.helloworld.Modelo.Deporte;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class GestorBD extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "staleCoach";
 
     public GestorBD(Context context) {
@@ -22,6 +23,7 @@ public class GestorBD extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        //Creo la base de datos
         String crearTablaDeporte="create table deporte (" +
                 "id_deporte INTEGER PRIMARY KEY," +
                 "deporte varchar (255)," +
@@ -56,7 +58,9 @@ public class GestorBD extends SQLiteOpenHelper {
         String categoria_entrenamiento="create table categoria_entrenamiento(" +
                 "id_cat INTEGER PRIMARY KEY," +
                 "nombre varchar (255)," +
-                "descripcion varchar (255))";
+                "descripcion varchar (255)," +
+                "foto varchar (255)," +
+                "id_deporte integer references deporte(id_deporte))";
         db.execSQL(categoria_entrenamiento);
 
         String alineacion="create table alineacion(" +
@@ -75,16 +79,78 @@ public class GestorBD extends SQLiteOpenHelper {
                 "PRIMARY KEY (id_obj, id_alin))";
         db.execSQL(coordenadas_alineacion);
 
+        //Meto en la base de datos los datos fijos
+        String insertDeporte="INSERT INTO deporte ('id_deporte','deporte','fondo','campo') VALUES" +
+                "(1,'Futbol','fondo_futbol.jpg','campo_futbol.jpg')," +
+                "(2,'Baloncesto','fondo_baloncesto.jpg','campo_baloncesto.jpg')," +
+                "(3,'Voleybol','fondo_voleybol.jpg','campo_voleybol.jpg')";
+        db.execSQL(insertDeporte);
+
+        String insertaCategoria="INSERT INTO categoria_entrenamiento ('id_cat','nombre','descripcion','foto','id_deporte') VALUES" +
+                "(1,'Remate','','remate.png',1)," +
+                "(2,'Pase','','pase.png',1)," +
+                "(3,'Velocidad','','velocidad.png',1)," +
+                "(4,'Balon parado','','balon-parado.png',1)," +
+                "(5,'Fisico','','fisico.png',1)," +
+                "(6,'Ataque','','ataque.png',1)," +
+                "(7,'Defensa','','defensa.png',1)";
+        db.execSQL(insertaCategoria);
+
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        //Elimino la base de datos si existe
+        db.execSQL("DROP TABLE IF EXISTS deporte");
+        db.execSQL("DROP TABLE IF EXISTS entrenamineto");
+        db.execSQL("DROP TABLE IF EXISTS objeto_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS coordenadas_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS categoria_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS alineacion");
+        db.execSQL("DROP TABLE IF EXISTS coordenadas_alineacion");
+        // Create tables again
+        onCreate(db);
     }
 
     // Upgrading database
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Drop older table if existed
-        //db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACTS);
-
+        //Elimino la base de datos si existe
+        db.execSQL("DROP TABLE IF EXISTS deporte");
+        db.execSQL("DROP TABLE IF EXISTS entrenamineto");
+        db.execSQL("DROP TABLE IF EXISTS objeto_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS coordenadas_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS categoria_entrenamiento");
+        db.execSQL("DROP TABLE IF EXISTS alineacion");
+        db.execSQL("DROP TABLE IF EXISTS coordenadas_alineacion");
         // Create tables again
         onCreate(db);
+    }
+
+    public List<CategoriaEntrenamiento> obtenerCategorias(Deporte d){
+        List<CategoriaEntrenamiento> categorias = new ArrayList<CategoriaEntrenamiento>();
+        // Select All Query
+        String selectQuery = "SELECT  * FROM categoria_entrenamiento where id_deporte="+d.getId_deporte();
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        if (cursor.moveToFirst()) {
+            do {
+                categorias.add(new CategoriaEntrenamiento(cursor.getInt(0),cursor.getString(1),cursor.getString(2),cursor.getString(3),d));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return categorias;
+    }
+    public void crearCategoria(CategoriaEntrenamiento c){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("id_cat", c.getId_cat());
+        values.put("nombre", c.getNombre());
+        values.put("descripcion", c.getDescripcion());
+        values.put("id_deporte", c.getDeporte().getId_deporte());
+        db.insert("categoria_entrenamiento", null, values);
+        db.close(); // Closing database connection
     }
     public void crearDeporte(Deporte d){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -96,11 +162,21 @@ public class GestorBD extends SQLiteOpenHelper {
         db.insert("deporte", null, values);
         db.close(); // Closing database connection
     }
+    public String obtenerFondoDeporte(String deporte){
+        String devolver=null;
+        String selectQuery = "SELECT  fondo FROM deportefutbol where deporte='"+deporte+"'";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("deportefutbol",new String[] {"fondo"} , "deportefutbol" + "=?",
+                new String[] { String.valueOf(deporte) }, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+        devolver=(cursor.getString(0));
+        return devolver;
+    }
     public List<Deporte> obtenerDeportes(){
         List<Deporte> contactList = new ArrayList<Deporte>();
         // Select All Query
         String selectQuery = "SELECT  * FROM deporte";
-
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         if (cursor.moveToFirst()) {

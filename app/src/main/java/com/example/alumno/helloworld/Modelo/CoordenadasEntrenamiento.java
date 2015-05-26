@@ -1,4 +1,4 @@
-package com.stalecoach.stalecoach.modelo;
+package com.example.alumno.helloworld.Modelo;
 
 /**
  * Created by damonfor on 05/03/2015.

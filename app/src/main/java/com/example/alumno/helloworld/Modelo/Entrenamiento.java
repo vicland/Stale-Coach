@@ -1,9 +1,9 @@
-package com.stalecoach.stalecoach.modelo;
+package com.example.alumno.helloworld.Modelo;
 
 /**
  * Created by damonfor on 05/03/2015.
  */
-public class Entrenamineto {
+public class Entrenamiento {
     private int id_entre;
     private String nombre;
     private Deporte deporte;
@@ -11,7 +11,7 @@ public class Entrenamineto {
     private String descripcion;
     private CategoriaEntrenamiento categoria_entrenamiento;
 
-    public Entrenamineto(int id_entre, String nombre, Deporte deporte, String imagen_miniatura, String descripcion, CategoriaEntrenamiento categoria_entrenamiento) {
+    public Entrenamiento(int id_entre, String nombre, Deporte deporte, String imagen_miniatura, String descripcion, CategoriaEntrenamiento categoria_entrenamiento) {
         this.id_entre = id_entre;
         this.nombre = nombre;
         this.deporte = deporte;
